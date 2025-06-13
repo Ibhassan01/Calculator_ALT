@@ -4,6 +4,14 @@ buttons.forEach((button) => {
     button.addEventListener('click', handleButtonClick);
 });
 
+//Keyboard event listener
+document.addEventListener('keydown', handleKeyboardInput);
+
+// Variables to store calculator state
+let currentInput = '0';
+let previousInput = '0';
+let currentOperator = '';
+
 // Clearing all numbers and operators
 function clear() {
     currentInput = '0';
@@ -11,7 +19,7 @@ function clear() {
     currentOperator = '';
 }
 
-// For checking if value is a number
+//Checking if value is a number
 function isNumeric(value) {
     return !isNaN(parseFloat(value)) && isFinite(value);
 }
@@ -43,22 +51,39 @@ function deleteLast() {
 function isOperator(value) {
     return value === '+' || value === '-' || value === '*' || value === '/';
 }
+
 function toggleSign() {
     if (currentInput !== '0') {
         currentInput = (-parseFloat(currentInput)).toString();
     }
 }
 
-  //Fuction for modal operator
-    function percentage() {
+  //Function for modal operator
+function percentage() {
     if (currentInput !== '0') {
         currentInput = (parseFloat(currentInput) / 100).toString();
     }
 }
 
+// Power function for exponentiation
+function power() {
+    if (currentOperator === '^' && previousInput !== '') {
+        const base = parseFloat(previousInput);
+        const exponent = parseFloat(currentInput);
+        currentInput = Math.pow(base, exponent).toString();
+        previousInput = '';
+        currentOperator = '';
+    }
+}
 
   //Calculating the whole expression
 function calculate() {
+    // Handle power operation
+    if (currentOperator === '^') {
+        power();
+        return;
+    }
+
     // Convert input values to numbers
     const num1 = parseFloat(previousInput);
     const num2 = parseFloat(currentInput);
@@ -104,9 +129,77 @@ function setOperator(operator) {
     currentInput = '0';
 }
 
+// Handle keyboard input
+function handleKeyboardInput(event) {
+    const key = event.key;
+    
+    // Prevent default behavior for calculator keys
+    const calculatorKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+                           '+', '-', '*', '/', '=', 'Enter', '.', 'Backspace', 
+                           'Delete', 'Escape', 'c', 'C', '%'];
+    
+    if (calculatorKeys.includes(key)) {
+        event.preventDefault();
+    }
+
+    switch (key) {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            appendInput(key);
+            break;
+        case '.':
+            if (!currentInput.includes('.')) {
+                appendInput(key);
+            }
+            break;
+        case '+':
+            setOperator('+');
+            break;
+        case '-':
+            setOperator('-');
+            break;
+        case '*':
+            setOperator('*');
+            break;
+        case '/':
+            setOperator('/');
+            break;
+        case '^':
+            setOperator('^');
+            break;
+        case '=':
+        case 'Enter':
+            calculate();
+            break;
+        case 'Backspace':
+        case 'Delete':
+            deleteLast();
+            break;
+        case 'Escape':
+        case 'c':
+        case 'C':
+            clear();
+            break;
+        case '%':
+            percentage();
+            break;
+        default:
+            return; // Don't update display for unhandled keys
+    }
+
+    updateDisplay();
+}
 
 function handleButtonClick(event) {
-    const buttonValue = event.target.innerText;
+    const buttonValue = event.target.innerText || event.target.alt;
 
     switch (buttonValue) {
         case 'C':
@@ -121,8 +214,17 @@ function handleButtonClick(event) {
         case '=':
             calculate();
             break;
-        case 'DEL':
+        case 'delete':
             deleteLast();
+            break;
+        case 'multiply':
+            setOperator('*');
+            break;
+        case 'divide':
+            setOperator('/');
+            break;
+        case '^':
+            setOperator('^');
             break;
         default:
             if (isNumeric(buttonValue) || buttonValue === '.') {
@@ -140,6 +242,7 @@ function handleButtonClick(event) {
 function updateDisplay() {
     display.innerText = currentInput;
 }
+
 //Clear display on page reload
 window.onload = () => {
     clear();
